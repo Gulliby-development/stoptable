@@ -60,7 +60,7 @@ trip 20 WE: HAR 09:00 > MKT 09:12 > PRK 09:40
 
 ## Commands
 
-`check FILE` checks the feed and reports findings, or confirms that it is clean.
+`check FILE` checks the feed and reports findings, or confirms that it is clean. It also reports a stop whose name another stop declared earlier already has, ignoring ASCII case (finding `TT006`).
 
 `board [--day DAY] [--after HH:MM] [--limit N] STOP FILE` lists departures from a stop on the selected day, at or after the selected time. It shows the destination stop and up to the selected limit.
 

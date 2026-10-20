@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,13 +22,26 @@ public final class Check {
     public static List<Finding> run(Feed feed) {
         List<Finding> findings = new ArrayList<>();
         Map<String, Integer> stopIndexes = new HashMap<>();
+        Map<String, Feed.Stop> firstStopByName = new HashMap<>();
         Map<String, Feed.Service> servicesById = new HashMap<>();
         boolean[] usedStops = new boolean[feed.stops().size()];
         Set<String> usedServices = new HashSet<>();
         DisjointSet groups = new DisjointSet(feed.stops().size());
 
         for (int index = 0; index < feed.stops().size(); index++) {
-            stopIndexes.put(feed.stops().get(index).id(), index);
+            Feed.Stop stop = feed.stops().get(index);
+            stopIndexes.put(stop.id(), index);
+
+            String normalizedName = stop.name().toLowerCase(Locale.ROOT);
+            Feed.Stop first = firstStopByName.putIfAbsent(normalizedName, stop);
+            if (first != null) {
+                findings.add(new Finding(
+                        stop.line(),
+                        "TT006",
+                        "stop " + Text.show(stop.id())
+                                + " has the same name as stop " + Text.show(first.id())
+                                + " (line " + first.line() + ")"));
+            }
         }
         for (Feed.Service service : feed.services()) {
             servicesById.put(service.id(), service);
