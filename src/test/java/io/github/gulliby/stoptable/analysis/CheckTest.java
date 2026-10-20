@@ -44,6 +44,53 @@ class CheckTest {
     }
 
     @Test
+    void duplicateStopNamesIgnoreAsciiCaseAndReferToTheFirstStop() {
+        Feed value = feed(
+                List.of(
+                        stop("A", "Market Square", 3),
+                        stop("B", "Church Lane", 4),
+                        stop("C", "market square", 5),
+                        stop("D", "MARKET SQUARE", 6)),
+                List.of(service("WD", 31, 7)),
+                List.of(trip("R", "WD", List.of(
+                        call("A", 480), call("B", 490), call("C", 500), call("D", 510)), 8)));
+
+        assertEquals(List.of(
+                finding(5, "TT006", "stop \"C\" has the same name as stop \"A\" (line 3)"),
+                finding(6, "TT006", "stop \"D\" has the same name as stop \"A\" (line 3)")),
+                Check.run(value));
+    }
+
+    @Test
+    void punctuationAndSpacingRemainSignificantForStopNames() {
+        Feed value = feed(
+                List.of(
+                        stop("A", "Main St", 1),
+                        stop("B", "Main St.", 2),
+                        stop("C", "Main  St", 3)),
+                List.of(service("WD", 31, 4)),
+                List.of(trip("R", "WD", List.of(
+                        call("A", 480), call("B", 490), call("C", 500)), 5)));
+
+        assertEquals(List.of(), Check.run(value));
+    }
+
+    @Test
+    void reportsDuplicateNamesForUnusedStopsInLineThenCodeOrder() {
+        Feed value = feed(
+                List.of(stop("A", "Dock", 1), stop("B", "Dock", 2)),
+                List.of(service("WD", 31, 3)),
+                List.of());
+
+        assertEquals(List.of(
+                finding(1, "TT001", "stop \"A\" is used by no trip"),
+                finding(2, "TT001", "stop \"B\" is used by no trip"),
+                finding(2, "TT006", "stop \"B\" has the same name as stop \"A\" (line 1)"),
+                finding(3, "TT002", "service \"WD\" is used by no trip")),
+                Check.run(value));
+    }
+
+    @Test
     void exactTripRepeatsReferenceTheFirstEarlierTripInFeedOrder() {
         Feed.Trip first = trip("R", "WD", List.of(call("A", 480), call("B", 490)), 30);
         Feed.Trip second = trip("R", "WD", List.of(call("A", 480), call("B", 490)), 10);
