@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 
 public final class Cli {
     public static final String USAGE = "usage: stoptable check FILE\n"
-            + "       stoptable board [--day DAY] [--after HH:MM] [--limit N] STOP FILE\n"
+            + "       stoptable board [--day DAY] [--after HH:MM] [--until HH:MM] [--limit N] STOP FILE\n"
             + "       stoptable trip [--day DAY] [--after HH:MM] [--transfer N] FROM TO FILE\n"
             + "       stoptable export [--format dot|mermaid] FILE";
 

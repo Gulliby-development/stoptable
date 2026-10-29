@@ -28,12 +28,12 @@ The built-in usage is:
 
 ```text
 usage: stoptable check FILE
-       stoptable board [--day DAY] [--after HH:MM] [--limit N] STOP FILE
+       stoptable board [--day DAY] [--after HH:MM] [--until HH:MM] [--limit N] STOP FILE
        stoptable trip [--day DAY] [--after HH:MM] [--transfer N] FROM TO FILE
        stoptable export [--format dot|mermaid] FILE
 ```
 
-Defaults are `--day mon`, `--after 00:00`, `--limit 10`, `--transfer 0` and `--format dot`. Run `java -cp target/classes io.github.gulliby.stoptable.Main --help` for the usage lines.
+Defaults are `--day mon`, `--after 00:00`, no `--until`, `--limit 10`, `--transfer 0` and `--format dot`. Run `java -cp target/classes io.github.gulliby.stoptable.Main --help` for the usage lines.
 
 The example feed below is used by the journey example; save this as village.tt. The repository does not ship the feed file.
 
@@ -62,11 +62,13 @@ trip 20 WE: HAR 09:00 > MKT 09:12 > PRK 09:40
 
 `check FILE` checks the feed and reports findings, or confirms that it is clean. It also reports a stop whose name another stop declared earlier already has, ignoring ASCII case (finding `TT006`).
 
-`board [--day DAY] [--after HH:MM] [--limit N] STOP FILE` lists departures from a stop on the selected day, at or after the selected time. It shows the destination stop and up to the selected limit.
+`board [--day DAY] [--after HH:MM] [--until HH:MM] [--limit N] STOP FILE` lists departures from a stop on the selected day, at or after the selected time and, with `--until`, no later than that time. It shows the destination stop and up to the selected limit.
 
 `trip [--day DAY] [--after HH:MM] [--transfer N] FROM TO FILE` finds the earliest-arrival journey from one stop to another. A transfer value is the number of minutes required between trips; staying on the same trip needs no transfer time.
 
 `export [--format dot|mermaid] FILE` prints the used stops and connections as a network diagram. The default format is DOT.
+
+With `--until`, the first line ends with `until HH:MM`, a departure at exactly that minute is listed, and the limit and the `+N more` line count only the departures inside the window. An `--until` earlier than `--after` is a usage error (exit 2): `stoptable: --until 07:00 is before --after 08:00`. For example, `board MKT --until 08:10 village.tt` prints the Market Square departures from midnight to 08:10.
 
 For example, with the feed saved as `village.tt`, run:
 
