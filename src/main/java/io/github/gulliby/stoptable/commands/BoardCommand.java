@@ -24,6 +24,7 @@ public final class BoardCommand {
                 Options.Spec.choice("--day", Feed.DAYS, 0),
                 Options.Spec.time("--after", 0),
                 Options.Spec.time("--until", NO_LIMIT),
+                Options.Spec.integer("--skip", 0, 99, 0),
                 Options.Spec.integer("--limit", 1, 99, 10));
         Options.Parsed parsed = Options.parse(argv, specs);
         List<String> args = parsed.args();
@@ -49,22 +50,27 @@ public final class BoardCommand {
         int day = values.get("--day");
         int after = values.get("--after");
         int until = values.get("--until");
+        int skip = values.get("--skip");
         int limit = values.get("--limit");
         if (until != NO_LIMIT && until < after) {
             throw new Failure.Usage("--until " + Clock.format(until) + " is before --after " + Clock.format(after));
         }
-        List<Board.Row> rows = new ArrayList<>();
+        List<Board.Row> window = new ArrayList<>();
         for (Board.Row row : Board.rows(feed, stopId, day, after)) {
             if (until == NO_LIMIT || row.minutes() <= until) {
-                rows.add(row);
+                window.add(row);
             }
         }
+        List<Board.Row> rows = skip >= window.size() ? List.of() : window.subList(skip, window.size());
 
         StringBuilder output = new StringBuilder();
         output.append(stop.id()).append(' ').append(stop.name()).append(", ")
                 .append(Feed.DAYS.get(day)).append(" from ").append(Clock.format(after));
         if (until != NO_LIMIT) {
             output.append(" until ").append(Clock.format(until));
+        }
+        if (skip > 0) {
+            output.append(" skip ").append(skip);
         }
         output.append('\n');
         if (rows.isEmpty()) {
