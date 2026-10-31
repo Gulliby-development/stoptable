@@ -28,12 +28,12 @@ The built-in usage is:
 
 ```text
 usage: stoptable check FILE
-       stoptable board [--day DAY] [--after HH:MM] [--until HH:MM] [--limit N] STOP FILE
+       stoptable board [--day DAY] [--after HH:MM] [--until HH:MM] [--skip N] [--limit N] STOP FILE
        stoptable trip [--day DAY] [--after HH:MM] [--transfer N] FROM TO FILE
        stoptable export [--format dot|mermaid] FILE
 ```
 
-Defaults are `--day mon`, `--after 00:00`, no `--until`, `--limit 10`, `--transfer 0` and `--format dot`. Run `java -cp target/classes io.github.gulliby.stoptable.Main --help` for the usage lines.
+Defaults are `--day mon`, `--after 00:00`, no `--until`, `--skip 0`, `--limit 10`, `--transfer 0` and `--format dot`. Run `java -cp target/classes io.github.gulliby.stoptable.Main --help` for the usage lines.
 
 The example feed below is used by the journey example; save this as village.tt. The repository does not ship the feed file.
 
@@ -62,13 +62,15 @@ trip 20 WE: HAR 09:00 > MKT 09:12 > PRK 09:40
 
 `check FILE` checks the feed and reports findings, or confirms that it is clean. It also reports a stop whose name another stop declared earlier already has, ignoring ASCII case (finding `TT006`).
 
-`board [--day DAY] [--after HH:MM] [--until HH:MM] [--limit N] STOP FILE` lists departures from a stop on the selected day, at or after the selected time and, with `--until`, no later than that time. It shows the destination stop and up to the selected limit.
+`board [--day DAY] [--after HH:MM] [--until HH:MM] [--skip N] [--limit N] STOP FILE` lists departures from a stop on the selected day, at or after the selected time and, with `--until`, no later than that time. It shows the destination stop and up to the selected limit. With `--skip N` it leaves out the first N departures of that list.
 
 `trip [--day DAY] [--after HH:MM] [--transfer N] FROM TO FILE` finds the earliest-arrival journey from one stop to another. A transfer value is the number of minutes required between trips; staying on the same trip needs no transfer time.
 
 `export [--format dot|mermaid] FILE` prints the used stops and connections as a network diagram. The default format is DOT.
 
 With `--until`, the first line ends with `until HH:MM`, a departure at exactly that minute is listed, and the limit and the `+N more` line count only the departures inside the window. An `--until` earlier than `--after` is a usage error (exit 2): `stoptable: --until 07:00 is before --after 08:00`. For example, `board MKT --until 08:10 village.tt` prints the Market Square departures from midnight to 08:10.
+
+With `--skip N` (an integer from 0 to 99, 0 by default) the first N departures of the list that the day, `--after` and `--until` select are left out, and `--limit` then applies to what remains, so `--skip 10` shows the second page of the default limit. When N is above 0 the first line ends with `skip N` (after `until HH:MM` if there is one), the `+N more` line counts only the departures after the ones shown, and a N that leaves nothing prints the first line and `no departures` (exit 1) like a list that was empty without it. A value that is not an integer from 0 to 99 is the usual usage error: `stoptable: invalid --skip "100" (expected an integer from 0 to 99)`. For example, `board MKT --skip 1 --limit 2 village.tt` prints the second and third Market Square departures and `+1 more`.
 
 For example, with the feed saved as `village.tt`, run:
 
